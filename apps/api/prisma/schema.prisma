@@ -1,0 +1,68 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  ADMIN
+  USER
+}
+
+enum EmployeeStatus {
+  ACTIVE
+  INACTIVE
+}
+
+enum VehicleStatus {
+  AVAILABLE
+  MAINTENANCE
+  RETIRED
+}
+
+model Employee {
+  id               String         @id @default(uuid())
+  employeeNo       String         @unique
+  name             String
+  email            String         @unique
+  department       String
+  position         String
+  hiredAt          DateTime
+  phone            String
+  status           EmployeeStatus @default(ACTIVE)
+  username         String         @unique
+  passwordHash     String
+  role             Role           @default(USER)
+  failedLoginCount Int            @default(0)
+  lockedUntil      DateTime?
+  createdAt        DateTime       @default(now())
+  updatedAt        DateTime       @updatedAt
+
+  vehicles Vehicle[]
+
+  @@index([department])
+  @@index([status])
+}
+
+model Vehicle {
+  id          String        @id @default(uuid())
+  plate       String        @unique
+  make        String
+  model       String
+  year        Int
+  color       String
+  status      VehicleStatus @default(AVAILABLE)
+  mileage     Int
+  purchasedAt DateTime
+  ownerId     String?
+  owner       Employee?     @relation(fields: [ownerId], references: [id])
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+
+  @@index([status])
+  @@index([ownerId])
+  @@index([purchasedAt])
+}
