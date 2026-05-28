@@ -12,6 +12,7 @@ docker compose up -d          # 啟 db (Postgres) + pgadmin (5050)
 npm install                   # 安裝所有 workspace 依賴
 npm run db:migrate            # 建立 schema
 npm run seed                  # 建立第一個 admin（讀 .env 的 SEED_ADMIN_*）
+npm run seed:mock             # 選用：塞 30 員工 + 50 車輛模擬資料，方便看 dashboard / 分頁
 ```
 
 ## 日常啟動
@@ -31,7 +32,7 @@ npm run dev                   # 同時起 api 與 web
 
 | 服務 | URL | 帳密 / 備註 |
 |---|---|---|
-| Web (Vite dev) | http://localhost:5173 | 若 5173 已被占用會自動往上找（5174、5175…），終端會印實際 port |
+| Web (Vite dev) | http://localhost:5174 | `apps/web/vite.config.ts` 預設 5174；被占用時 Vite 會往上找（5175、5176…），終端會印實際 port |
 | API (Express) | http://localhost:3000 | `GET /api/health` 應回 `{"ok":true}` |
 | Postgres | localhost:5432 | DB `vms` / user `vms` / password `vms`（見 `.env`） |
 | pgAdmin (Postgres Admin 網頁) | http://localhost:5050 | 預設 `admin@example.com` / `admin`（見 `.env` 的 `PGADMIN_DEFAULT_*`） |
@@ -40,7 +41,7 @@ npm run dev                   # 同時起 api 與 web
 
 ### Port 已被占用時怎麼辦
 
-如果 3000、5173 已被其他程式占用，**最簡單**的做法是：
+如果 3000、5174 已被其他程式占用，**最簡單**的做法是：
 1. 改 `.env` 的 `API_PORT` 與 `WEB_ORIGIN`（兩者要對齊：例如 `API_PORT=3010` → `WEB_ORIGIN=http://localhost:5175`）。
 2. 把 `apps/web/vite.config.ts` 的 `server.port` 改成同一個 port（或讓 Vite 自動 fallback，啟動時看終端印出的 `Local:` URL）。
 3. 重新 `npm run dev`。
@@ -88,7 +89,7 @@ Vite 找不到 port 時會自己往上找一個能用的；但 **api 的 `WEB_OR
 
 ## 預設 Web 操作流程
 
-1. 開 http://localhost:5173（或實際 Vite 印出的 URL）
+1. 開 http://localhost:5174（或實際 Vite 印出的 URL）
 2. 用 `admin` / `admin12345` 登入
 3. Dashboard 應顯示 6 張 card + 3 張 chart（admin 視角）
 4. 點左側「員工」可建立新員工（含登入帳號、角色）
@@ -104,7 +105,7 @@ Vite 找不到 port 時會自己往上找一個能用的；但 **api 的 `WEB_OR
 ```
 apps/
   api/     Express + Prisma（port 3000）
-  web/     Vite + React + shadcn/ui（port 5173）
+  web/     Vite + React + shadcn/ui（port 5174）
 packages/
   shared/  兩邊共用的 zod schema、type、ApiError
 infra/
@@ -118,15 +119,19 @@ openspec/  本專案的需求／設計／規格／任務（OpenSpec）
 ```bash
 npm run dev          # 同時起 api + web（concurrently）
 npm test             # 跑 root + 兩個 app 的測試（jest、vitest）
+npm run lint         # ESLint + 各 workspace lint
 npm run db:migrate   # prisma migrate dev
 npm run db:reset     # prisma migrate reset（會被 Prisma 防呆擋；輸入 y 才會跑）
 npm run db:studio    # 開 prisma studio (5555)
 npm run seed         # 重新建立 seed admin
+npm run seed:mock    # 開發用：保留 ADMIN、清空其他資料，塞 30 員工 + 50 車輛
 ```
 
 ## 規格與設計
 
-需求／設計／規格／任務文件位於 `openspec/changes/add-vehicle-management-system/`。
+- 各 capability 目前的規格（已 sync）位於 `openspec/specs/{auth,dashboard,employees,vehicles}/spec.md`
+- 歷史 change（含 proposal、design、tasks、delta specs）位於 `openspec/changes/archive/`
+- 新需求請走 OpenSpec workflow（`.cursor/skills/` 與 `openspec-*` / `opsx:*` skills）開 change，不要直接手改主 specs
 
 ## 內建 Skills
 
