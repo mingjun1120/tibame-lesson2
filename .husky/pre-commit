@@ -1,0 +1,36 @@
+#!/bin/sh
+
+echo "Running lint and tests in parallel..."
+
+LINT_OUT=$(mktemp)
+TEST_OUT=$(mktemp)
+
+npm run lint > "$LINT_OUT" 2>&1 &
+LINT_PID=$!
+
+npm test > "$TEST_OUT" 2>&1 &
+TEST_PID=$!
+
+LINT_EXIT=0
+TEST_EXIT=0
+
+wait $LINT_PID || LINT_EXIT=$?
+wait $TEST_PID || TEST_EXIT=$?
+
+echo ""
+echo "─── Lint ───────────────────────────"
+cat "$LINT_OUT"
+
+echo ""
+echo "─── Tests ──────────────────────────"
+cat "$TEST_OUT"
+
+rm -f "$LINT_OUT" "$TEST_OUT"
+
+echo ""
+[ $LINT_EXIT -ne 0 ] && echo "✗ Lint failed."
+[ $TEST_EXIT -ne 0 ] && echo "✗ Tests failed."
+
+[ $LINT_EXIT -ne 0 ] || [ $TEST_EXIT -ne 0 ] && exit 1
+
+echo "✓ All checks passed."

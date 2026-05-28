@@ -1,0 +1,9 @@
+.DS_Store
+
+node_modules/
+
+# Claude Code 本機個人設定（含 permission 紀錄與指向 .agents/ 的 symlink）
+.claude/
+
+# Skill 自動產生的時間戳備份
+.agents/backup/

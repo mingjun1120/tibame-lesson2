@@ -1,0 +1,22 @@
+{
+  "name": "tibame-lesson2",
+  "version": "0.1.0",
+  "description": "Node.js agent skill practice project",
+  "type": "module",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix",
+    "test": "node --experimental-vm-modules node_modules/.bin/jest",
+    "test:watch": "node --experimental-vm-modules node_modules/.bin/jest --watch",
+    "prepare": "husky"
+  },
+  "devDependencies": {
+    "@eslint/js": "^10.0.1",
+    "eslint": "^10.4.0",
+    "husky": "^9.0.0",
+    "jest": "^30.4.2"
+  }
+}
