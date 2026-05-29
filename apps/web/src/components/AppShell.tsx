@@ -1,5 +1,5 @@
 import { Link, NavLink, Outlet, useNavigate } from "react-router-dom";
-import { Car, LayoutDashboard, LogOut, Moon, Sun, Users } from "lucide-react";
+import { Car, LayoutDashboard, LogOut, Moon, ScrollText, Sun, Users } from "lucide-react";
 import { useEffect, useState } from "react";
 import { apiClient } from "@/lib/api";
 import { useAuthStore } from "@/store/auth";
@@ -57,6 +57,13 @@ export function AppShell() {
           <NavItem to="/vehicles" icon={<Car className="h-4 w-4" />} label="車輛" />
           {user?.role === "ADMIN" && (
             <NavItem to="/employees" icon={<Users className="h-4 w-4" />} label="員工" />
+          )}
+          {user?.role === "ADMIN" && (
+            <NavItem
+              to="/audit-logs"
+              icon={<ScrollText className="h-4 w-4" />}
+              label="操作紀錄"
+            />
           )}
           <div className="mt-auto rounded-lg border bg-card/60 p-3 text-xs text-muted-foreground">
             登入身分：
