@@ -370,7 +370,8 @@ function VehicleSheet({
       color: v.color as (typeof VEHICLE_COLORS)[number],
       status: v.status,
       mileage: v.mileage,
-      purchasedAt: new Date(v.purchasedAt),
+      // date input 需要 YYYY-MM-DD 字串才能正確回填；提交時由 z.coerce.date() 轉回 Date。
+      purchasedAt: v.purchasedAt.slice(0, 10) as unknown as Date,
       ownerId: v.ownerId ?? undefined,
     };
   }, [editing, isNew]);
