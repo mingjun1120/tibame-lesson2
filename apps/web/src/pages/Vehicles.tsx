@@ -77,6 +77,7 @@ interface EmployeeOption {
   id: string;
   name: string;
   employeeNo: string;
+  status: "ACTIVE" | "INACTIVE";
 }
 
 interface Page<T> {
@@ -98,13 +99,15 @@ function useDebounced<T>(value: T, ms = 300): T {
   return v;
 }
 
-function useActiveEmployees(enabled: boolean) {
+// 抓全部員工（含 INACTIVE）作為 owner 名稱查找表，讓離職員工的車也能顯示姓名；
+// 指派 owner 的下拉則只取 ACTIVE（見 VehicleSheet），與 API 的 assertActiveOwner 一致。
+function useEmployeesLookup(enabled: boolean) {
   return useQuery({
     enabled,
-    queryKey: ["employees", "lookup-active"],
+    queryKey: ["employees", "lookup-all"],
     queryFn: async () => {
       const { data } = await apiClient.get<Page<EmployeeOption>>("/employees", {
-        params: { status: "ACTIVE", pageSize: 100 },
+        params: { status: "ALL", pageSize: 100 },
       });
       return data.items;
     },
@@ -132,7 +135,7 @@ export function VehiclesPage() {
     },
   });
 
-  const employees = useActiveEmployees(isAdmin);
+  const employees = useEmployeesLookup(isAdmin);
   const ownerMap = useMemo(() => {
     const m = new Map<string, EmployeeOption>();
     employees.data?.forEach((e) => m.set(e.id, e));
@@ -143,7 +146,9 @@ export function VehiclesPage() {
     if (!ownerId) return "—";
     if (!isAdmin) return user?.name ?? "本人";
     const e = ownerMap.get(ownerId);
-    return e ? `${e.name}（${e.employeeNo}）` : ownerId.slice(0, 8) + "…";
+    if (!e) return ownerId.slice(0, 8) + "…";
+    const label = `${e.name}（${e.employeeNo}）`;
+    return e.status === "INACTIVE" ? `${label} · 已離職` : label;
   };
 
   const [editing, setEditing] = useState<VehicleRow | "new" | null>(null);
@@ -470,11 +475,13 @@ function VehicleSheet({
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value={OWNER_NONE}>未指派</SelectItem>
-                    {employees.map((e) => (
-                      <SelectItem key={e.id} value={e.id}>
-                        {e.name}（{e.employeeNo}）
-                      </SelectItem>
-                    ))}
+                    {employees
+                      .filter((e) => e.status === "ACTIVE")
+                      .map((e) => (
+                        <SelectItem key={e.id} value={e.id}>
+                          {e.name}（{e.employeeNo}）
+                        </SelectItem>
+                      ))}
                   </SelectContent>
                 </Select>
               )}
