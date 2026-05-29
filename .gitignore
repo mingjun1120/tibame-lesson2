@@ -29,3 +29,6 @@ apps/web/.vite/
 
 # pgAdmin local data
 .pgadmin/
+
+# Playwright MCP 產物（快照 / console log / 截圖）
+.playwright-mcp/
