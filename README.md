@@ -1,4 +1,4 @@
-# tibame-lesson1
+# tibame-lesson2
 
 這是一個 AI 課程的範例專案，提供預設的 **Agent Skills** 供學員練習如何與 AI 協作開發。
 
