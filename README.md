@@ -16,14 +16,26 @@ npm run seed                  # 建立第一個 admin（讀 .env 的 SEED_ADMIN_
 
 ## 日常啟動
 
+先確保 db / pgadmin 在跑：
+
 ```bash
-docker compose up -d          # 確保 db / pgadmin 在跑
-npm run dev                   # 同時起 api 與 web
+docker compose up -d
 ```
 
-`npm run dev` 會用 `concurrently` 同時跑 `apps/api`（`tsx watch`）與 `apps/web`（`vite`）。
+啟動 api + web，兩種擇一：
 
-要停掉：在跑 `npm run dev` 的終端按 `Ctrl+C`；docker 服務則 `docker compose down`。
+```bash
+# 一鍵：兩邊 log 混在同一終端（concurrently，前綴 [api]/[web]）
+npm run dev
+
+# 或 分開兩個終端，各看各的乾淨 log（debug / 讀 log 更清楚）
+npm run dev:api   # 終端 A：Express（tsx watch，:8090）
+npm run dev:web   # 終端 B：Vite（:3087）
+```
+
+`npm run dev` 帶 `--kill-others-on-fail`：任一邊崩了會連帶停掉另一邊，不會留下半殘的 stack。
+
+要停掉：在對應終端按 `Ctrl+C`；docker 服務則 `docker compose down`。
 
 ---
 
@@ -31,8 +43,8 @@ npm run dev                   # 同時起 api 與 web
 
 | 服務 | URL | 帳密 / 備註 |
 |---|---|---|
-| Web (Vite dev) | http://localhost:5173 | 若 5173 已被占用會自動往上找（5174、5175…），終端會印實際 port |
-| API (Express) | http://localhost:3000 | `GET /api/health` 應回 `{"ok":true}` |
+| Web (Vite dev) | http://localhost:3087 | 若 3087 已被占用會自動往上找（3088、3089…），終端會印實際 port |
+| API (Express) | http://localhost:8090 | `GET /api/health` 應回 `{"ok":true}` |
 | Postgres | localhost:5432 | DB `vms` / user `vms` / password `vms`（見 `.env`） |
 | pgAdmin (Postgres Admin 網頁) | http://localhost:5050 | 預設 `admin@example.com` / `admin`（見 `.env` 的 `PGADMIN_DEFAULT_*`） |
 
@@ -40,55 +52,24 @@ npm run dev                   # 同時起 api 與 web
 
 ### Port 已被占用時怎麼辦
 
-如果 3000、5173 已被其他程式占用，**最簡單**的做法是：
-1. 改 `.env` 的 `API_PORT` 與 `WEB_ORIGIN`（兩者要對齊：例如 `API_PORT=3010` → `WEB_ORIGIN=http://localhost:5175`）。
-2. 把 `apps/web/vite.config.ts` 的 `server.port` 改成同一個 port（或讓 Vite 自動 fallback，啟動時看終端印出的 `Local:` URL）。
+預設已選用較冷門的 8090 / 3087 以降低衝突。若仍被占用，**只需改根目錄 `.env`**（單一來源，不必動程式）：
+1. `API_PORT` 與 `API_TARGET` 要對齊（例：`API_PORT=8091` → `API_TARGET=http://localhost:8091`）。
+2. `WEB_PORT` 與 `WEB_ORIGIN` 要對齊（例：`WEB_PORT=3088` → `WEB_ORIGIN=http://localhost:3088`）。
 3. 重新 `npm run dev`。
 
-Vite 找不到 port 時會自己往上找一個能用的；但 **api 的 `WEB_ORIGIN` 要對齊 web 實際 port**，否則 CORS 會擋 cookie。
+> Vite（web）撞埠會自動往上找一個能用的；但 Express（api）撞埠會直接 `EADDRINUSE` 結束，所以 api 的埠優先挑沒被占用的。`WEB_ORIGIN` 要對齊 web 實際 port，否則 CORS 會擋 cookie。
 
 ---
 
-## 使用 pgAdmin（Postgres Admin 網頁）
+## 使用 pgAdmin
 
-### 登入 pgAdmin
-
-1. 開 http://localhost:5050
-2. 輸入：
-   - Email：`admin@example.com`
-   - Password：`admin`
-
-（這兩個值定義在 `.env` 的 `PGADMIN_DEFAULT_EMAIL` / `PGADMIN_DEFAULT_PASSWORD`，可自行修改）
-
-### 連到 Postgres
-
-**不需要手動 add server**。pgAdmin 啟動時已自動從 `infra/pgadmin/servers.json` 載入一條連線，並透過 `infra/pgadmin/pgpass` 預載密碼。登入後直接：
-
-1. 左側 server tree 展開 **Servers → VMS local**
-2. 展開 **Databases → vms → Schemas → public → Tables**
-3. 可以看到 `Employee` 與 `Vehicle` 兩張表
-4. 對著 table 按右鍵 → **View/Edit Data → All Rows** 即可查資料
-
-### 如果要手動建立 Server（萬一 servers.json 沒生效）
-
-按左側 Servers → 右鍵 → Register → Server，填：
-
-| 分頁 | 欄位 | 值 |
-|---|---|---|
-| General | Name | 任意，例如 `VMS local` |
-| Connection | Host name/address | **`db`**（這是 docker network 內的服務名，不是 `localhost`） |
-| Connection | Port | `5432` |
-| Connection | Maintenance database | `vms` |
-| Connection | Username | `vms` |
-| Connection | Password | `vms`（勾「Save password」省得每次再輸入） |
-
-> 如果你是從 **host machine 直接連**（例如 `psql`、TablePlus、DBeaver），則用 `localhost:5432` / `vms` / `vms` / `vms`。`db` 這個 hostname 只在 docker compose network 內有效。
+pgAdmin 操作（登入、連 Postgres、手動建 server）詳見 [`infra/pgadmin/README.md`](infra/pgadmin/README.md)。
 
 ---
 
 ## 預設 Web 操作流程
 
-1. 開 http://localhost:5173（或實際 Vite 印出的 URL）
+1. 開 http://localhost:3087（或實際 Vite 印出的 URL）
 2. 用 `admin` / `admin12345` 登入
 3. Dashboard 應顯示 6 張 card + 3 張 chart（admin 視角）
 4. 點左側「員工」可建立新員工（含登入帳號、角色）
@@ -103,8 +84,8 @@ Vite 找不到 port 時會自己往上找一個能用的；但 **api 的 `WEB_OR
 
 ```
 apps/
-  api/     Express + Prisma（port 3000）
-  web/     Vite + React + shadcn/ui（port 5173）
+  api/     Express + Prisma（port 8090）
+  web/     Vite + React + shadcn/ui（port 3087）
 packages/
   shared/  兩邊共用的 zod schema、type、ApiError
 infra/
@@ -116,10 +97,14 @@ openspec/  本專案的需求／設計／規格／任務（OpenSpec）
 ## 常用指令
 
 ```bash
-npm run dev          # 同時起 api + web（concurrently）
-npm test             # 跑 root + 兩個 app 的測試（jest、vitest）
+npm run dev          # 同時起 api + web（concurrently，--kill-others-on-fail）
+npm run dev:api      # 只起 api（Express / tsx watch）
+npm run dev:web      # 只起 web（Vite）
+npm test             # 跑兩個 app 的測試（api: jest、web: vitest）
+npm run test:api     # 只跑 api 測試（jest，需 docker DB 在跑）
+npm run test:web     # 只跑 web 測試（vitest）
 npm run db:migrate   # prisma migrate dev
-npm run db:reset     # prisma migrate reset（會被 Prisma 防呆擋；輸入 y 才會跑）
+npm run db:reset     # prisma migrate reset --force（直接重置，不會互動詢問）
 npm run db:studio    # 開 prisma studio (5555)
 npm run seed         # 重新建立 seed admin
 ```
