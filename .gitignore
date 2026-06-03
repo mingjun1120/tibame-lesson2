@@ -24,7 +24,7 @@ apps/api/prisma/migrations/dev.db*
 apps/web/dist/
 apps/web/.vite/
 
-# TypeScript incremental build cache
+# TypeScript build info（tsc -b 產物）
 *.tsbuildinfo
 
 # pgAdmin local data
