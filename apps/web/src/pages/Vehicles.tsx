@@ -71,6 +71,7 @@ interface VehicleRow {
   mileage: number;
   purchasedAt: string;
   ownerId: string | null;
+  owner: { name: string; employeeNo: string; status: "ACTIVE" | "INACTIVE" } | null;
 }
 
 interface EmployeeOption {
@@ -99,8 +100,8 @@ function useDebounced<T>(value: T, ms = 300): T {
   return v;
 }
 
-// 抓全部員工（含 INACTIVE）作為 owner 名稱查找表，讓離職員工的車也能顯示姓名；
-// 指派 owner 的下拉則只取 ACTIVE（見 VehicleSheet），與 API 的 assertActiveOwner 一致。
+// 員工清單（含 INACTIVE）供「指派 owner」下拉使用，下拉只取 ACTIVE（見 VehicleSheet），與 API 的 assertActiveOwner 一致。
+// owner 姓名顯示改由 /vehicles 後端 join 帶回（含 status 判斷是否離職），不再依賴此清單。
 function useEmployeesLookup(enabled: boolean) {
   return useQuery({
     enabled,
@@ -136,19 +137,13 @@ export function VehiclesPage() {
   });
 
   const employees = useEmployeesLookup(isAdmin);
-  const ownerMap = useMemo(() => {
-    const m = new Map<string, EmployeeOption>();
-    employees.data?.forEach((e) => m.set(e.id, e));
-    return m;
-  }, [employees.data]);
 
-  const describeOwner = (ownerId: string | null) => {
-    if (!ownerId) return "—";
+  const describeOwner = (v: VehicleRow) => {
+    if (!v.ownerId) return "—";
     if (!isAdmin) return user?.name ?? "本人";
-    const e = ownerMap.get(ownerId);
-    if (!e) return ownerId.slice(0, 8) + "…";
-    const label = `${e.name}（${e.employeeNo}）`;
-    return e.status === "INACTIVE" ? `${label} · 已離職` : label;
+    if (!v.owner) return v.ownerId.slice(0, 8) + "…";
+    const label = `${v.owner.name}（${v.owner.employeeNo}）`;
+    return v.owner.status === "INACTIVE" ? `${label} · 已離職` : label;
   };
 
   const [editing, setEditing] = useState<VehicleRow | "new" | null>(null);
@@ -253,7 +248,7 @@ export function VehiclesPage() {
                 </TableCell>
                 <TableCell>{v.purchasedAt.slice(0, 10)}</TableCell>
                 <TableCell className="text-muted-foreground">
-                  {describeOwner(v.ownerId)}
+                  {describeOwner(v)}
                 </TableCell>
                 {isAdmin && (
                   <TableCell className="space-x-2 text-right">
