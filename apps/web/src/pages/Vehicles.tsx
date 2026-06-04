@@ -71,6 +71,7 @@ interface VehicleRow {
   mileage: number;
   purchasedAt: string;
   ownerId: string | null;
+  owner: { name: string; employeeNo: string; status: "ACTIVE" | "INACTIVE" } | null;
 }
 
 interface EmployeeOption {
@@ -136,19 +137,13 @@ export function VehiclesPage() {
   });
 
   const employees = useEmployeesLookup(isAdmin);
-  const ownerMap = useMemo(() => {
-    const m = new Map<string, EmployeeOption>();
-    employees.data?.forEach((e) => m.set(e.id, e));
-    return m;
-  }, [employees.data]);
 
-  const describeOwner = (ownerId: string | null) => {
-    if (!ownerId) return "—";
+  const describeOwner = (v: VehicleRow) => {
+    if (!v.ownerId) return "—";
     if (!isAdmin) return user?.name ?? "本人";
-    const e = ownerMap.get(ownerId);
-    if (!e) return ownerId.slice(0, 8) + "…";
-    const label = `${e.name}（${e.employeeNo}）`;
-    return e.status === "INACTIVE" ? `${label} · 已離職` : label;
+    if (!v.owner) return v.ownerId.slice(0, 8) + "…";
+    const label = `${v.owner.name}（${v.owner.employeeNo}）`;
+    return v.owner.status === "INACTIVE" ? `${label} · 已離職` : label;
   };
 
   const [editing, setEditing] = useState<VehicleRow | "new" | null>(null);
@@ -253,7 +248,7 @@ export function VehiclesPage() {
                 </TableCell>
                 <TableCell>{v.purchasedAt.slice(0, 10)}</TableCell>
                 <TableCell className="text-muted-foreground">
-                  {describeOwner(v.ownerId)}
+                  {describeOwner(v)}
                 </TableCell>
                 {isAdmin && (
                   <TableCell className="space-x-2 text-right">
