@@ -71,6 +71,7 @@ interface VehicleRow {
   mileage: number;
   purchasedAt: string;
   ownerId: string | null;
+  owner: { name: string; employeeNo: string } | null;
 }
 
 interface EmployeeOption {
@@ -133,17 +134,11 @@ export function VehiclesPage() {
   });
 
   const employees = useActiveEmployees(isAdmin);
-  const ownerMap = useMemo(() => {
-    const m = new Map<string, EmployeeOption>();
-    employees.data?.forEach((e) => m.set(e.id, e));
-    return m;
-  }, [employees.data]);
 
-  const describeOwner = (ownerId: string | null) => {
-    if (!ownerId) return "—";
+  const describeOwner = (v: VehicleRow) => {
+    if (!v.ownerId) return "—";
     if (!isAdmin) return user?.name ?? "本人";
-    const e = ownerMap.get(ownerId);
-    return e ? `${e.name}（${e.employeeNo}）` : ownerId.slice(0, 8) + "…";
+    return v.owner ? `${v.owner.name}（${v.owner.employeeNo}）` : v.ownerId.slice(0, 8) + "…";
   };
 
   const [editing, setEditing] = useState<VehicleRow | "new" | null>(null);
@@ -248,7 +243,7 @@ export function VehiclesPage() {
                 </TableCell>
                 <TableCell>{v.purchasedAt.slice(0, 10)}</TableCell>
                 <TableCell className="text-muted-foreground">
-                  {describeOwner(v.ownerId)}
+                  {describeOwner(v)}
                 </TableCell>
                 {isAdmin && (
                   <TableCell className="space-x-2 text-right">
