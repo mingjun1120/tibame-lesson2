@@ -18,8 +18,8 @@ export function App() {
     (async () => {
       try {
         const { data } = await apiClient.get("/auth/me");
-        // /me 不會回傳 csrfToken；現有 store 中如果有 token 就保留，否則登入後會更新。
-        setSession(data.user, useAuthStore.getState().csrfToken ?? "");
+        // /me 會回傳依 cookie 內 JWT 推導的 csrfToken，重整後也能還原，後續 mutating 請求（含登出）才不會缺 CSRF。
+        setSession(data.user, data.csrfToken);
       } catch {
         clearSession();
       } finally {
