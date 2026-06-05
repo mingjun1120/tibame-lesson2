@@ -85,5 +85,6 @@ authRouter.get("/me", requireAuth, async (req, res) => {
       employeeId: pub.id,
       email: pub.email,
     },
+    csrfToken: deriveCsrf(req.user!.token),
   });
 });
