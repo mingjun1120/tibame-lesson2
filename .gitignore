@@ -2,6 +2,13 @@
 
 node_modules/
 
+# Environment files (never commit real secrets)
+.env
+*.local
+
+# Build output
+dist/
+
 # 統一由 .agents 管理，個人的設定不上傳
 .claude/
 .agent
