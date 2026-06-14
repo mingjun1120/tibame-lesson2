@@ -109,21 +109,12 @@ npm run dev                     # 前端 → http://localhost:5173
 
 ## pgAdmin（資料庫網頁管理）
 
-1. 開啟 http://localhost:5050，用 **`admin@example.com` / `admin`** 登入（這是 pgAdmin 本身的帳密，與應用程式帳號無關）。
-2. 左側 **Servers** 按右鍵 → **Register → Server…**（舊版為 *Create → Server*）。
-3. **General** 分頁：`Name` 隨意填，例如 `VMS Postgres`。
-4. **Connection** 分頁填入：
+開啟 http://localhost:5050，用 **`admin@example.com` / `admin`** 登入（這是 pgAdmin 本身的帳密，與應用程式帳號無關）。
 
-   | 欄位 | 值 | 說明 |
-   |---|---|---|
-   | Host name/address | `postgres` | ⚠️ 用 Docker 服務名，**不是** `localhost` |
-   | Port | `5432` | ⚠️ 容器**內部**埠，**不是** 5433 |
-   | Maintenance database | `vms` | |
-   | Username | `vms` | |
-   | Password | `vms_password` | 勾選 *Save password* 較方便 |
+登入後，左側 **Servers** 底下會**自動出現 `VMS Postgres`** 這台連線——它透過 `docker/pgadmin/servers.json` 預先載入、密碼由 `docker/pgadmin/pgpass` 帶入。展開 `VMS Postgres → Databases → vms → Schemas → public → Tables`，即可看到 `employees` 與 `vehicles` 兩張表。若第一次連線仍要求密碼，輸入 `vms_password` 即可（可勾 *Save password*）。
 
-5. 按 **Save**。展開 `VMS Postgres → Databases → vms → Schemas → public → Tables`，即可看到 `employees` 與 `vehicles` 兩張表。
+> **想自己手動加一台時**：**Servers** 右鍵 → **Register → Server…**，在 **Connection** 分頁填 Host=`postgres`、Port=`5432`、Maintenance database=`vms`、Username=`vms`、Password=`vms_password`。
+>
+> ⚠️ 關鍵：Host 用 Docker 服務名 **`postgres`**、Port 用容器內部埠 **`5432`**，**不是** `localhost:5433`。pgAdmin 在 Docker 網路內是「容器對容器」連線；`localhost:5433` 那組是給你電腦上的工具（DBeaver、psql、TablePlus…）用的對外埠。
 
-> 為什麼 pgAdmin 用 `postgres:5432` 而不是 `localhost:5433`？因為 pgAdmin 跑在 Docker 網路內，是用「容器對容器」連線，目標是 Postgres 服務名與其內部埠。`localhost:5433` 是給**本機**工具（DBeaver、psql、TablePlus…）用的對外埠。
-
-> pgAdmin 已掛載 `vms_pgadmin` volume，你註冊的 Server 連線在 `docker compose down` 後仍會保留（除非 `docker compose down -v` 連同 volume 刪除）。
+> pgAdmin 設定掛載在 `vms_pgadmin` volume，重啟（`docker compose down`）後保留；若要連同預載重新匯入一次，用 `docker compose down -v` 清掉 volume 再 `up` 即可。
