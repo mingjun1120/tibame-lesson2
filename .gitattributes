@@ -1,0 +1,4 @@
+# Files read inside Linux containers/shells must stay LF on every platform.
+# A CRLF pgpass would append "\r" to the password and break pgAdmin auto-connect.
+docker/pgadmin/pgpass text eol=lf
+.husky/pre-commit text eol=lf
