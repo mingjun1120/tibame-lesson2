@@ -26,6 +26,8 @@ export default [
     },
   },
   {
-    ignores: ["node_modules/", "coverage/"],
+    // frontend/ and backend/ are self-contained sub-projects with their own
+    // toolchains; keep the root lint scoped to the skills practice code.
+    ignores: ["node_modules/", "coverage/", "frontend/", "backend/", "dist/"],
   },
 ];
