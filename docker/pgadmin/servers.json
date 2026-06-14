@@ -1,0 +1,14 @@
+{
+  "Servers": {
+    "1": {
+      "Name": "VMS Postgres",
+      "Group": "Servers",
+      "Host": "postgres",
+      "Port": 5432,
+      "MaintenanceDB": "vms",
+      "Username": "vms",
+      "PassFile": "/pgpass",
+      "SSLMode": "prefer"
+    }
+  }
+}
