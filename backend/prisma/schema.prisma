@@ -1,0 +1,57 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  admin
+  user
+}
+
+enum EmployeeStatus {
+  active
+  inactive
+}
+
+enum VehicleStatus {
+  available
+  in_use
+  maintenance
+  retired
+}
+
+model Employee {
+  id           Int            @id @default(autoincrement())
+  name         String
+  email        String         @unique
+  passwordHash String         @map("password_hash")
+  role         Role           @default(user)
+  department   String?
+  position     String?
+  phone        String?
+  hireDate     DateTime?      @map("hire_date") @db.Date
+  status       EmployeeStatus @default(active)
+  createdAt    DateTime       @default(now()) @map("created_at")
+  updatedAt    DateTime       @updatedAt @map("updated_at")
+
+  @@map("employees")
+}
+
+model Vehicle {
+  id           Int           @id @default(autoincrement())
+  plateNo      String        @unique @map("plate_no")
+  brand        String
+  model        String
+  year         Int
+  status       VehicleStatus @default(available)
+  mileage      Int           @default(0)
+  purchaseDate DateTime?     @map("purchase_date") @db.Date
+  createdAt    DateTime      @default(now()) @map("created_at")
+  updatedAt    DateTime      @updatedAt @map("updated_at")
+
+  @@map("vehicles")
+}
