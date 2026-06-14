@@ -90,3 +90,40 @@ npm run dev                     # 前端 → http://localhost:5173
 | 一般使用者 | `alice@example.com` | `user123` |
 
 > Postgres 對外埠改用 **5433**，避免與本機既有的 Postgres（5432）衝突。如需改回，調整根目錄 `.env` 的 `POSTGRES_PORT` 與 `backend/.env` 的 `DATABASE_URL`。
+
+## 服務一覽（網址與帳密）
+
+| 服務 | 網址 | 帳號 | 密碼 |
+|---|---|---|---|
+| 前端 Web | http://localhost:5173 | 見下方應用程式帳號 | — |
+| 後端 API | http://localhost:4000 | （JWT，由登入取得） | — |
+| pgAdmin | http://localhost:5050 | `admin@example.com` | `admin` |
+| Postgres（給本機工具連） | `localhost:5433` | `vms` | `vms_password` |
+
+應用程式登入帳號（前端 5173 使用）：
+
+| 角色 | 帳號 | 密碼 |
+|---|---|---|
+| 管理者 admin | `admin@example.com` | `admin123` |
+| 一般使用者 user | `alice@example.com` | `user123` |
+
+## pgAdmin（資料庫網頁管理）
+
+1. 開啟 http://localhost:5050，用 **`admin@example.com` / `admin`** 登入（這是 pgAdmin 本身的帳密，與應用程式帳號無關）。
+2. 左側 **Servers** 按右鍵 → **Register → Server…**（舊版為 *Create → Server*）。
+3. **General** 分頁：`Name` 隨意填，例如 `VMS Postgres`。
+4. **Connection** 分頁填入：
+
+   | 欄位 | 值 | 說明 |
+   |---|---|---|
+   | Host name/address | `postgres` | ⚠️ 用 Docker 服務名，**不是** `localhost` |
+   | Port | `5432` | ⚠️ 容器**內部**埠，**不是** 5433 |
+   | Maintenance database | `vms` | |
+   | Username | `vms` | |
+   | Password | `vms_password` | 勾選 *Save password* 較方便 |
+
+5. 按 **Save**。展開 `VMS Postgres → Databases → vms → Schemas → public → Tables`，即可看到 `employees` 與 `vehicles` 兩張表。
+
+> 為什麼 pgAdmin 用 `postgres:5432` 而不是 `localhost:5433`？因為 pgAdmin 跑在 Docker 網路內，是用「容器對容器」連線，目標是 Postgres 服務名與其內部埠。`localhost:5433` 是給**本機**工具（DBeaver、psql、TablePlus…）用的對外埠。
+
+> pgAdmin 已掛載 `vms_pgadmin` volume，你註冊的 Server 連線在 `docker compose down` 後仍會保留（除非 `docker compose down -v` 連同 volume 刪除）。
